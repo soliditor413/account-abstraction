@@ -8,6 +8,9 @@ import 'solidity-coverage'
 
 import * as fs from 'fs'
 
+import dotenv from "dotenv";
+dotenv.config({ path: __dirname + '/.env' });
+
 const mnemonicFileName = process.env.MNEMONIC_FILE ?? `${process.env.HOME}/.secret/testnet-mnemonic.txt`
 let mnemonic = 'test '.repeat(11) + 'junk'
 if (fs.existsSync(mnemonicFileName)) { mnemonic = fs.readFileSync(mnemonicFileName, 'ascii') }
@@ -48,21 +51,51 @@ const config: HardhatUserConfig = {
       'contracts/samples/SimpleAccount.sol': optimizedComilerSettings
     }
   },
+
   networks: {
     dev: { url: 'http://localhost:8545' },
     // github action starts localgeth service, for gas calculations
     localgeth: { url: 'http://localgeth:8545' },
     goerli: getNetwork('goerli'),
     sepolia: getNetwork('sepolia'),
-    proxy: getNetwork1('http://localhost:8545')
+    proxy: getNetwork1('http://localhost:8545'),
+    eco_mainnet: getNetwork1('https://api.elastos.io/eco'),
+  },
+  // Ignore node_modules in the watcher
+  watcher: {
+    compile: {
+      tasks: ["compile"],
+      files: ["./contracts"],
+      verbose: true,
+    },
   },
   mocha: {
     timeout: 10000
   },
 
   etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY
-  }
+    apiKey: {
+      mainnet: process.env.ETHERSCAN_API_KEY || '',
+      goerli: process.env.ETHERSCAN_API_KEY || '',
+      sepolia: process.env.ETHERSCAN_API_KEY || '',
+      eco_mainnet: 'empty',
+    },
+    customChains: [
+      {
+        network: 'eco_mainnet',
+        chainId: 12343, // Elastos chain ID is 20, not 12343
+        urls: {
+          apiURL: "https://eco.elastos.io:443/api",
+          browserURL: "https://eco.elastos.io:443"
+        }
+      },
+    ]
+  },
+  namedAccounts: {
+    deployer: {
+      default: 0, // First account from mnemonic
+    },
+  },
 
 }
 

@@ -7,7 +7,9 @@ const deploySimpleAccountFactory: DeployFunction = async function (hre: HardhatR
   const from = await provider.getSigner().getAddress()
   const network = await provider.getNetwork()
   // only deploy on local test network.
-  if (network.chainId !== 31337 && network.chainId !== 1337) {
+    console.log('network.chainId=', network.chainId)
+    return;
+  if (network.chainId !== 12343 && network.chainId !== 1337) {
     return
   }
 
