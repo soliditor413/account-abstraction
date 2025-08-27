@@ -597,16 +597,17 @@ contract EntryPoint is IEntryPoint, StakeManager, NonceManager, ReentrancyGuard 
      * the gas price this UserOp agrees to pay.
      * relayer/block builder might submit the TX with higher priorityFee, but the user should not
      */
-    function getUserOpGasPrice(MemoryUserOp memory mUserOp) internal view returns (uint256) {
-    unchecked {
-        uint256 maxFeePerGas = mUserOp.maxFeePerGas;
-        uint256 maxPriorityFeePerGas = mUserOp.maxPriorityFeePerGas;
-        if (maxFeePerGas == maxPriorityFeePerGas) {
-            //legacy mode (for networks that don't support basefee opcode)
-            return maxFeePerGas;
-        }
-        return min(maxFeePerGas, maxPriorityFeePerGas + block.basefee);
-    }
+    function getUserOpGasPrice(MemoryUserOp memory /*mUserOp*/) internal view returns (uint256) {
+        return tx.gasprice ;//* 110 / 100;//10% tip for networks that don't support eip1559 tx
+//        unchecked {
+//        uint256 maxFeePerGas = mUserOp.maxFeePerGas;
+//        uint256 maxPriorityFeePerGas = mUserOp.maxPriorityFeePerGas;
+//        if (maxFeePerGas == maxPriorityFeePerGas) {
+//            //legacy mode (for networks that don't support basefee opcode)
+//            return maxFeePerGas;
+//        }
+//        return min(maxFeePerGas, maxPriorityFeePerGas + block.basefee);
+//    }
     }
 
     function min(uint256 a, uint256 b) internal pure returns (uint256) {

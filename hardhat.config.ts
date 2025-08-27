@@ -3,6 +3,9 @@ import '@typechain/hardhat'
 import { HardhatUserConfig } from 'hardhat/config'
 import 'hardhat-deploy'
 import '@nomiclabs/hardhat-etherscan'
+import '@nomiclabs/hardhat-ethers';
+import '@openzeppelin/hardhat-upgrades';
+import { HDNode } from "@ethersproject/hdnode";
 
 import 'solidity-coverage'
 
@@ -14,7 +17,7 @@ dotenv.config({ path: __dirname + '/.env' });
 const mnemonicFileName = process.env.MNEMONIC_FILE ?? `${process.env.HOME}/.secret/testnet-mnemonic.txt`
 let mnemonic = 'test '.repeat(11) + 'junk'
 if (fs.existsSync(mnemonicFileName)) { mnemonic = fs.readFileSync(mnemonicFileName, 'ascii') }
-
+const private_key = HDNode.fromMnemonic(mnemonic).privateKey;
 function getNetwork1 (url: string): { url: string, accounts: { mnemonic: string } } {
   return {
     url,
@@ -60,6 +63,10 @@ const config: HardhatUserConfig = {
     sepolia: getNetwork('sepolia'),
     proxy: getNetwork1('http://localhost:8545'),
     eco_mainnet: getNetwork1('https://api.elastos.io/eco'),
+    hardhat: {
+      chainId: 12343,
+      accounts:   [{ privateKey: private_key, balance: '10000000000000000000000' }]
+    },
   },
   // Ignore node_modules in the watcher
   watcher: {
@@ -88,9 +95,10 @@ const config: HardhatUserConfig = {
           apiURL: "https://eco.elastos.io:443/api",
           browserURL: "https://eco.elastos.io:443"
         }
-      },
-    ]
+      }
+      ]
   },
+
   namedAccounts: {
     deployer: {
       default: 0, // First account from mnemonic
