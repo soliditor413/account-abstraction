@@ -26,10 +26,12 @@ contract PGAPaymaster is BasePaymaster, ERC20 {
     uint256 constant public MAX_ETH_PER_TOKEN_RATE = 10000;
     uint256 public ethPerTokenRate;
 
-    address public immutable theFactory;
+    address public theFactory;
     IAssetOracle public assetOracle;
 
     event SetEthPerTokenRate(uint256 ethPerTokenRate);
+    event SetAssetOracle(IAssetOracle newAssetOracle);
+    event SetTheFactory(address newFactory);
 
     constructor(
         address accountFactory,
@@ -128,5 +130,25 @@ contract PGAPaymaster is BasePaymaster, ERC20 {
         uint256 charge = getTokenValueOfEth(actualGasCost + COST_OF_POST);
         //actualGasCost is known to be no larger than the above requiredPreFund, so the transfer should succeed.
         _transfer(sender, address(this), charge);
+    }
+
+    /**
+    * @notice Updates the factory contract address
+     * @param newFactory The address of the new factory contract
+     */
+    function setTheFactory(address newFactory) external onlyOwner {
+        require(newFactory != address(0), "Factory cannot be zero address");
+        theFactory = newFactory;
+        emit SetTheFactory(newFactory);
+    }
+
+    /**
+     * @notice Updates the asset oracle contract address
+     * @param newAssetOracle The address of the new asset oracle contract
+     */
+    function setAssetOracle(IAssetOracle newAssetOracle) external onlyOwner {
+        require(address(newAssetOracle) != address(0), "Asset oracle cannot be zero address");
+        assetOracle = newAssetOracle;
+        emit SetAssetOracle(newAssetOracle);
     }
 }
