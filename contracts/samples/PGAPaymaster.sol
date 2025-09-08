@@ -27,28 +27,23 @@ contract PGAPaymaster is BasePaymaster, ERC20 {
     uint256 public ethPerTokenRate;
 
     address public theFactory;
-    IAssetOracle public assetOracle;
 
     event SetEthPerTokenRate(uint256 ethPerTokenRate);
-    event SetAssetOracle(IAssetOracle newAssetOracle);
     event SetTheFactory(address newFactory);
 
     constructor(
         address accountFactory,
         string memory _symbol,
         IEntryPoint _entryPoint,
-        IAssetOracle _assetOracle,
         address mintTo
     ) ERC20(_symbol, _symbol) BasePaymaster(_entryPoint) {
         require(
             accountFactory != address (0) &&
             address(_entryPoint) != address(0) &&
-            address(_assetOracle) != address(0) &&
             address(mintTo) != address(0)
             , "address cannot be zero"
         );
         theFactory = accountFactory;
-        assetOracle = _assetOracle;
         //make it non-empty
         uint256 totalSupply = 200000000 * 1e18;
         _mint(mintTo, totalSupply);
@@ -78,7 +73,6 @@ contract PGAPaymaster is BasePaymaster, ERC20 {
     }
 
     function setEthPerTokenRate(uint256 _ethPerTokenRate) external onlyOwner {
-        require(_ethPerTokenRate < MAX_ETH_PER_TOKEN_RATE);
         ethPerTokenRate = _ethPerTokenRate;
         emit SetEthPerTokenRate(_ethPerTokenRate);
     }
@@ -140,15 +134,5 @@ contract PGAPaymaster is BasePaymaster, ERC20 {
         require(newFactory != address(0), "Factory cannot be zero address");
         theFactory = newFactory;
         emit SetTheFactory(newFactory);
-    }
-
-    /**
-     * @notice Updates the asset oracle contract address
-     * @param newAssetOracle The address of the new asset oracle contract
-     */
-    function setAssetOracle(IAssetOracle newAssetOracle) external onlyOwner {
-        require(address(newAssetOracle) != address(0), "Asset oracle cannot be zero address");
-        assetOracle = newAssetOracle;
-        emit SetAssetOracle(newAssetOracle);
     }
 }
