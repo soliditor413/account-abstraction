@@ -25,11 +25,12 @@ contract PGAPaymaster is BasePaymaster, ERC20 {
     uint256 constant public COST_OF_POST = 15000 + 18000;
     uint256 constant public MAX_ETH_PER_TOKEN_RATE = 10000;
     uint256 public ethPerTokenRate;
-
     address public theFactory;
+    address public operator;
 
     event SetEthPerTokenRate(uint256 ethPerTokenRate);
     event SetTheFactory(address newFactory);
+    event SetOperator(address newOperator);
 
     constructor(
         address accountFactory,
@@ -51,6 +52,21 @@ contract PGAPaymaster is BasePaymaster, ERC20 {
         //owner is allowed to withdraw tokens from the paymaster's balance
         _approve(address(this), msg.sender, totalSupply);
         ethPerTokenRate = MAX_ETH_PER_TOKEN_RATE;
+        operator = msg.sender;
+    }
+
+    function setOperator(address newOperator) external onlyOwner {
+        operator = newOperator;
+        emit SetOperator(newOperator);
+    }
+
+    modifier onlyOperator() {
+        _checkOperator();
+        _;
+    }
+
+    function _checkOperator() internal view virtual {
+        require(operator == _msgSender(), "PayMaster: caller is not the operator");
     }
 
     /**
@@ -72,7 +88,7 @@ contract PGAPaymaster is BasePaymaster, ERC20 {
         return valueEth * ethPerTokenRate / MAX_ETH_PER_TOKEN_RATE;
     }
 
-    function setEthPerTokenRate(uint256 _ethPerTokenRate) external onlyOwner {
+    function setEthPerTokenRate(uint256 _ethPerTokenRate) external onlyOperator {
         ethPerTokenRate = _ethPerTokenRate;
         emit SetEthPerTokenRate(_ethPerTokenRate);
     }
