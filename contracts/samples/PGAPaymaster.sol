@@ -22,7 +22,7 @@ import {IAssetOracle} from "./IAssetOracle.sol";
 contract PGAPaymaster is BasePaymaster, ERC20 {
 
     //calculated cost of the postOp
-    uint256 constant public COST_OF_POST = 15000 + 18000;
+    uint256 constant public COST_OF_POST = 15000 + 20000;
     uint256 constant public MAX_ETH_PER_TOKEN_RATE = 10000;
     uint256 public ethPerTokenRate;
     address public theFactory;
@@ -150,5 +150,40 @@ contract PGAPaymaster is BasePaymaster, ERC20 {
         require(newFactory != address(0), "Factory cannot be zero address");
         theFactory = newFactory;
         emit SetTheFactory(newFactory);
+    }
+
+    /**
+     * withdraw value from the deposit
+     * @param withdrawAddress target to send to
+     * @param amount to withdraw
+     */
+    function withdrawTo(address payable withdrawAddress, uint256 amount) public onlyOperator {
+        entryPoint.withdrawTo(withdrawAddress, amount);
+    }
+
+    /**
+     * add stake for this paymaster.
+     * This method can also carry eth value to add to the current stake.
+     * @param unstakeDelaySec - the unstake delay for this paymaster. Can only be increased.
+     */
+    function addStake(uint32 unstakeDelaySec) external payable onlyOperator {
+        entryPoint.addStake{value : msg.value}(unstakeDelaySec);
+    }
+
+    /**
+     * withdraw the entire paymaster's stake.
+     * stake must be unlocked first (and then wait for the unstakeDelay to be over)
+     * @param withdrawAddress the address to send withdrawn value.
+     */
+    function withdrawStake(address payable withdrawAddress) external onlyOperator {
+        entryPoint.withdrawStake(withdrawAddress);
+    }
+
+    /**
+    * unlock the stake, in order to withdraw it.
+    * The paymaster can't serve requests once unlocked, until it calls addStake again
+    */
+    function unlockStake() external onlyOperator {
+        entryPoint.unlockStake();
     }
 }
