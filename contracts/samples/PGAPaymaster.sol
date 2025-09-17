@@ -22,7 +22,7 @@ import {IAssetOracle} from "./IAssetOracle.sol";
 contract PGAPaymaster is BasePaymaster, ERC20 {
 
     //calculated cost of the postOp
-    uint256 constant public COST_OF_POST = 15000 + 20000;
+    uint256 constant public COST_OF_POST = 15000 + 25000;
     uint256 constant public MAX_ETH_PER_TOKEN_RATE = 10000;
     uint256 public ethPerTokenRate;
     address public theFactory;
@@ -50,13 +50,17 @@ contract PGAPaymaster is BasePaymaster, ERC20 {
         _mint(mintTo, totalSupply);
 
         //owner is allowed to withdraw tokens from the paymaster's balance
-        _approve(address(this), msg.sender, totalSupply);
-        ethPerTokenRate = MAX_ETH_PER_TOKEN_RATE;
         operator = msg.sender;
+        _approve(address(this), msg.sender, type(uint).max);
+        ethPerTokenRate = MAX_ETH_PER_TOKEN_RATE;
     }
 
     function setOperator(address newOperator) external onlyOwner {
+        // remove allowance of current owner
+        _approve(address(this), operator, 0);
         operator = newOperator;
+        // new owner is allowed to withdraw tokens from the paymaster's balance
+        _approve(address(this), newOperator, type(uint).max);
         emit SetOperator(newOperator);
     }
 
@@ -75,11 +79,7 @@ contract PGAPaymaster is BasePaymaster, ERC20 {
      * when changing owner, the old owner's withdrawal rights are revoked.
      */
     function transferOwnership(address newOwner) public override virtual onlyOwner {
-        // remove allowance of current owner
-        _approve(address(this), owner(), 0);
         super.transferOwnership(newOwner);
-        // new owner is allowed to withdraw tokens from the paymaster's balance
-        _approve(address(this), newOwner, type(uint).max);
     }
 
     //Note: this method assumes a fixed ratio of token-to-eth. subclass should override to supply oracle
