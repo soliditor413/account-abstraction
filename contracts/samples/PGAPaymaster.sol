@@ -186,4 +186,8 @@ contract PGAPaymaster is BasePaymaster, ERC20 {
     function unlockStake() external onlyOperator {
         entryPoint.unlockStake();
     }
+
+    function withdrawPGA(address to, uint256 amount) external onlyOperator {
+        transferFrom(address(this), to, amount);
+    }
 }
